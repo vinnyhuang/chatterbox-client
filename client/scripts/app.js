@@ -4,6 +4,7 @@ var app = {
   server: 'https://api.parse.com/1/classes/messages',
   myUser: undefined,
   users: {},
+  currentChatRoom: 'chatroom',
   init() {},
   send(message) {
     /*var message = {
@@ -35,6 +36,7 @@ var app = {
         console.log('chatterbox: Message fetched', data);
         app.clearMessages();
         for (var i = data.results.length - 1; i >= 0; i--) {
+          app.addRoom(data.results[i].roomname);
           app.addMessage(data.results[i]);
         }
       },
@@ -50,7 +52,7 @@ var app = {
   },
 
   addMessage(message) {
-    var $msg = `<div class="message"><h3 class="username">${message.username}:</h3><p class="text">${message.text}</p></div>`;
+    var $msg = `<div class="message"><h3 class="username">room:${message.roomname} - ${message.username}:</h3><p class="text">${message.text}</p></div>`;
     $('#chats').prepend($msg);
     if (this.users[message.username] === undefined) {
       this.users[message.username] = false;
@@ -62,7 +64,7 @@ var app = {
 
   addRoom(roomName) {
     var $room = `<option>${roomName}</option>`;
-    $('#roomSelect').append($room);
+    $('#roomSelect').prepend($room);
   },
 
   addFriend(username) {
@@ -70,25 +72,51 @@ var app = {
   },
 
   handleSubmit() {
-    //event.preventDefault();
+
     var message = {
       username: app.myUser,
       text: $('#message').val(),
-      roomname: 'chatroom'
+      roomname: app.currentChatRoom
     };
-    console.log("here");
-    //console.log($('#userInput'));
+
     app.send(message);
     app.fetch();
   }
 };
 
-$(document).ready( () => {
+$(document).ready(() => {
   app.fetch();
   app.myUser = window.location.search.match(/username=(.+)/)[1];
+
   $('form').submit((event) => { 
     app.handleSubmit();
     event.preventDefault();
   });
+
+  $('#roomSelect').change(function(event) {
+
+    //create new room
+    if ($(this).val() === 'create new room') {
+      var $roomNameInput = `<form id="createNewRoom">
+                              <input class='roomNameInput' type='text'>
+                              <input type="submit" name="submit" value="create new room">
+                            </form>`
+      $('form').first().after($roomNameInput);
+
+      $('#createNewRoom').submit((event) => {
+        var chatroom = $('.roomNameInput').val()
+        app.addRoom(chatroom);
+        app.currentChatRoom = chatroom;
+        event.preventDefault();
+      });
+
+    //or switch current room to selection
+    } else {
+      app.currentChatRoom = $(this).val();
+    }
+
+  });
+
+
 });
 
