@@ -19,18 +19,23 @@
       <form>
         <label>Room
           <select name="room" id="roomSelect">
-            <option>chatroom</option>
+            <option>lobby</option>
             <option class="newChatRoom">create new room</option>
           </select>
         </label>
       </form>
 
-
-      <form>
-        <input id="message" type="text">
-        <input id="send" class="submit" type="submit" name="submit" value="send">
+      <form id="createNewRoom">
+        <input class='roomNameInput' type='text'>
+        <input type="submit" name="submit" value="create new room">
       </form>
 
+      <div id="send">
+        <form class="submit">
+          <input id="message" type="text">
+          <input type="submit" name="submit" value="send">
+        </form>
+      </div>
       <!--<button type="button" id="sendButton">send</button>-->
     </div>
     <div id="chats"></div>

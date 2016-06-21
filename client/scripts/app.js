@@ -4,7 +4,8 @@ var app = {
   server: 'https://api.parse.com/1/classes/messages',
   myUser: undefined,
   users: {},
-  currentChatRoom: 'chatroom',
+  chatrooms: {lobby: true},
+  currentChatRoom: 'lobby',
   init() {},
   send(message) {
     /*var message = {
@@ -28,7 +29,7 @@ var app = {
     });
   },
 
-  fetch() {
+  fetch(first) {
     $.ajax({
       url: this.server,
       type: 'GET',
@@ -36,8 +37,13 @@ var app = {
         console.log('chatterbox: Message fetched', data);
         app.clearMessages();
         for (var i = data.results.length - 1; i >= 0; i--) {
-          app.addRoom(data.results[i].roomname);
-          app.addMessage(data.results[i]);
+          if (first) {
+            app.addRoom(data.results[i].roomname);
+          }
+          //if (filterCallback(data.results[i])) {
+          if (data.results[i].roomname === app.currentChatRoom || app.currentChatRoom === 'lobby') {
+            app.addMessage(data.results[i]);
+          }
         }
       },
       error: function (data) {
@@ -52,27 +58,45 @@ var app = {
   },
 
   addMessage(message) {
-    var $msg = `<div class="message"><h3 class="username">room:${message.roomname} - ${message.username}:</h3><p class="text">${message.text}</p></div>`;
+    var $msg = `<div class="chat"><h3 class="username">room:${message.roomname} - ${message.username}:</h3><p class="text">${message.text}</p></div>`;
     $('#chats').prepend($msg);
     if (this.users[message.username] === undefined) {
       this.users[message.username] = false;
     }
     $('#chats').children().first().click((event) => {
-      this.addFriend(message.username);
+      if (this.users[message.username]) {
+        this.removeFriend(message.username);
+      } else {
+        this.addFriend(message.username);
+      }
     });
+    if (app.users[message.username]) {
+      $('#chats').children().first().addClass('friend');
+    }
   },
 
   addRoom(roomName) {
-    var $room = `<option>${roomName}</option>`;
-    $('#roomSelect').prepend($room);
+    if (app.chatrooms[roomName] === undefined) {
+      var $room = `<option>${roomName}</option>`;
+      $('#roomSelect').prepend($room);
+      app.chatrooms[roomName] = true;
+    } else {
+      //document.getElementById('roomSelect').value = roomName;
+      app.currentChatRoom = roomName;
+    }
+    $('#roomSelect').val(roomName);
   },
 
   addFriend(username) {
     this.users[username] = true;
   },
 
-  handleSubmit() {
+  removeFriend(username) {
+    this.users[username] = false;
+  },
 
+  handleSubmit() {
+    console.log ('submitted');
     var message = {
       username: app.myUser,
       text: $('#message').val(),
@@ -81,11 +105,16 @@ var app = {
 
     app.send(message);
     app.fetch();
+  },
+  
+  escaper(string) {
+    return (/<\/?\w+/).test(string);
   }
 };
 
 $(document).ready(() => {
-  app.fetch();
+  $('#createNewRoom').hide();
+  app.fetch(true);
   setInterval(() => { app.fetch(); }, 3000);
   app.myUser = window.location.search.match(/username=(.+)/)[1];
 
@@ -98,17 +127,19 @@ $(document).ready(() => {
 
     //create new room
     if ($(this).val() === 'create new room') {
-      var $roomNameInput = `<form id="createNewRoom">
+      /*var $roomNameInput = `<form id="createNewRoom">
                               <input class='roomNameInput' type='text'>
                               <input type="submit" name="submit" value="create new room">
-                            </form>`
-      $('form').first().after($roomNameInput);
+                            </form>`;*/
+      //$('form').first().after($roomNameInput);
+      $('#createNewRoom').show();
 
       $('#createNewRoom').submit((event) => {
-        var chatroom = $('.roomNameInput').val()
+        var chatroom = $('.roomNameInput').val();
         app.addRoom(chatroom);
         app.currentChatRoom = chatroom;
         event.preventDefault();
+        $('#createNewRoom').hide();
       });
 
     //or switch current room to selection

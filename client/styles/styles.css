@@ -66,6 +66,7 @@ form input[type=text] {
 }
 
 .chat .username {
+    cursor: pointer;
     font-weight: 800;
 }
 
