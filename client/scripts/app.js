@@ -85,6 +85,7 @@ var app = {
 
 $(document).ready( () => {
   app.fetch();
+  setInterval(() => { app.fetch(); }, 3000);
   app.myUser = window.location.search.match(/username=(.+)/)[1];
   $('form').submit((event) => { 
     app.handleSubmit();
