@@ -119,8 +119,9 @@ describe('chatterbox', function() {
 
         app.init();
 
-        $('#send .submit').trigger('submit');
+        $('#send').trigger('submit');
         console.dir(app.handleSubmit);
+        console.log('' + app.handleSubmit);
         expect(app.handleSubmit.calledOnce).to.be.true;
 
         app.handleSubmit.restore();
