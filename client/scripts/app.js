@@ -5,6 +5,7 @@ var app = {
   myUser: undefined,
   users: {},
   chatrooms: {lobby: true},
+  tabbedrooms: {lobby: true},
   currentChatRoom: 'lobby',
   init() {},
   send(message) {
@@ -33,8 +34,11 @@ var app = {
     $.ajax({
       url: this.server,
       type: 'GET',
+      data: {
+        where: {'roomname': app.currentChatRoom}
+      },
       success: function (data) {
-        //console.log('chatterbox: Message fetched', data);
+        console.log('chatterbox: Message fetched', data);
         app.clearMessages();
         for (var i = data.results.length - 1; i >= 0; i--) {
           if (first) {
@@ -113,11 +117,27 @@ var app = {
 
   escaper(string) {
     return (/<\/?\w+/).test(string);
+  },
+
+  changeTab() {
+    if (app.tabbedrooms[app.currentChatRoom] === undefined) {
+      console.log("abcd");
+      app.tabbedrooms[app.currentChatRoom] = true;
+      $tab = `<li><a class="tab">${app.currentChatRoom}</a></li>`;
+      $('#tabList').children().last().prev().before($tab);
+      $('.selected').removeClass('selected');
+      $('#tabList').children().last().prev().prev().addClass('selected');
+      //$('#tabList').children().last().prev().prev().before($tab);
+    } else {
+      $('.selected').removeClass('selected');
+      $(this).addClass('selected');
+    }
   }
 };
 
 $(document).ready(() => {
   $('#createNewRoom').hide();
+  $('#selector').hide();
   app.fetch(true);
   setInterval(() => { app.fetch(); }, 3000);
   app.myUser = window.location.search.match(/username=(.+)/)[1];
@@ -138,15 +158,38 @@ $(document).ready(() => {
         app.currentChatRoom = chatroom;
         event.preventDefault();
         $('#createNewRoom').hide();
+        app.changeTab();
       });
 
     //or switch current room to selection
     } else {
       app.currentChatRoom = $(this).val();
+      app.changeTab();
     }
 
   });
 
+  $('#tabList').on('click', '.tab', function(event) {
+    app.currentChatRoom = $(this).text();
+    $('.selected').removeClass('selected');
+    $(this).addClass('selected');
+  });
+
+  $('#tabList').on('click', '#newTab', function(event) {
+    $('#selector').slideToggle();
+    //var $newTab = $('<li/>').append
+  });
+
+  $('#tabList').on('click', '#removeTab', function(event) {
+    $('.selected').remove();
+    $('.tab').first().addClass('selected');
+    tabbedrooms[$(this).text()] = undefined;
+    app.currentChatRoom = $('.tab').first().text() || false;
+    //var $newTab = $('<li/>').append
+  });
 
 });
 
+// var changeRoom = function(evt, room) {
+//   app.currentChatRoom = room;
+// };
